@@ -1,17 +1,24 @@
 import curses
+import irclib
+import sys
 from theme import *
 from ui    import *
-from irc   import *
 
 SERVER='irc.freenode.net'
 PORT=6667
-NICK='rphillips-256'
+NICKNAME='rphillips-256'
 ROOM='#rphillips-test'
 
 def main(stdscr):
+  irc = irclib.IRC()
+  try:
+    server = irc.server().connect(SERVER, PORT, NICKNAME)
+  except irclib.ServerConnectionError, x:
+    print(x)
+    sys.exit(1)
+
   theme = WombatTheme()
-  client = IRC(SERVER, PORT, NICK, ROOM)
-  ui = UI(client, stdscr, theme)
+  ui = UI(irc, server, ROOM, stdscr, theme)
   ui.draw()
   ui.run()
 

@@ -1,11 +1,15 @@
 import curses
-from line import *
+import irclib
+from curses.ascii import isprint
+from line import Line
 
 class UI:
-  def __init__(self, irc, screen, theme):
+  def __init__(self, irc, server, room, screen, theme):
     self.theme = theme
     self.screen = screen
     self.irc = irc
+    self.server = server
+    self.room = room
     self.height, self.width = self._limits();
     self.topic = Line('topic', 'this just in: bloglines is hard', False)
     self.status = Line('status', '[20:49] [rphillips(+Zi)] [6:#bloglines(+ns)]', False)
@@ -21,6 +25,12 @@ class UI:
     self.screen.setscrreg(1, self.height-3)
 
     self._draw_chat()
+
+    self.irc.add_global_handler("welcome", self.on_connect)
+    self.irc.add_global_handler("motd", self.on_motd)
+    self.irc.add_global_handler("privmsg", self.on_privmsg)
+    self.irc.add_global_handler("pubmsg", self.on_privmsg)
+    self.irc.add_global_handler("join", self.on_join)
 
   def _limits(self):
     return self.screen.getmaxyx()
@@ -77,9 +87,21 @@ class UI:
     self._draw_input()
     self.screen.refresh()
 
-  def _in_cb(self, msg):
-    if msg != "":
-      self.add_line(Line('chat', msg, timestamp=True))
+  def on_join(self, connection, event):
+    self.add_line(Line('chat', "Joined " + event.target(), timestamp=False))
+
+  def on_connect(self, connection, event):
+    if irclib.is_channel(self.room):
+      connection.join(self.room)
+    self.add_line(Line('chat', "Connected", timestamp=True))
+
+  def on_privmsg(self, connection, event):
+    who = event.source()[0:event.source().find("!")]
+    msg = who + "> " + " ".join(event.arguments())
+    self.add_line(Line('chat', msg, timestamp=True))
+
+  def on_motd(self, connection, event):
+    self.add_line(Line('chat', " ".join(event.arguments()), timestamp=False))
 
   def run(self):
     while 1:
@@ -88,13 +110,13 @@ class UI:
         if ch == ord('\n'):
           msg = self.input_line.data
           self.add_line(Line('chat', msg, timestamp=True))
-          self.irc.write(msg)
+          self.server.privmsg(self.room, msg)
           self.input_line.clear_data()
           self._draw_input()
         elif ch == 127: #backspace
           self.input_line.backspace()
           self._draw_input()
-        else:
+        elif isprint(ch):
           self.input_line.add_ch(chr(ch))
 
-      #self.irc.run_once(self._in_cb)
+      self.irc.process_once()

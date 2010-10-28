@@ -36,3 +36,15 @@ class WombatTheme(Theme):
   def __init__(self):
     Theme.__init__(self, self.theme)
 
+
+class XoriaTheme(Theme):
+  theme = {
+      'status'     : { 'fg':230, 'bg':237 }
+    , 'topic'      : { 'fg':230, 'bg':237 }
+    , 'chat'       : { 'fg':188, 'bg':234 }
+    , 'line'       : { 'fg':252, 'bg':234 }
+    , 'time'       : { 'fg':248, 'bg':232 }
+    , 'input'      : { 'fg':251, 'bg':234 }
+  }
+  def __init__(self):
+    Theme.__init__(self, self.theme)

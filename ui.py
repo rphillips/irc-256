@@ -29,7 +29,6 @@ class UI:
     self.irc.add_global_handler("welcome", self.on_connect)
     self.irc.add_global_handler("motd", self.on_motd)
     self.irc.add_global_handler("pubmsg", self.on_pubmsg)
-    self.irc.add_global_handler("join", self.on_join)
     self.irc.add_global_handler("currenttopic", self.on_currenttopic)
 
   def _limits(self):
@@ -64,7 +63,6 @@ class UI:
     self._draw_line(0, self.topic)
 
   def _draw_status(self):
-    #self.status = Line('status', "[rphillips(+Zi)] [#%(room)s]" % )
     self._draw_line(self.height-2, self.status)
 
   def _draw_lines(self):
@@ -97,27 +95,19 @@ class UI:
     self._draw_topic()
     self._goto_input()
 
-  def on_join(self, connection, event):
-    params = {
-      'room' : event.target(),
-      'who' : event.source()[0:event.source().find("!")],
-    }
-
-    self.add_line(Line('chat', "Joined " + event.target(), timestamp=False))
-
-    self.status = Line('status', "[%(who)s(+Zi)] [#%(room)s]" % (params))
-    self._draw_status()
-    self._goto_input()
-
   def on_connect(self, connection, event):
     if irclib.is_channel(self.room):
       connection.join(self.room)
+      who = event.source()[0:event.source().find("!")]
+      self.status = Line('status', "[%s] [%s]" % (who, self.room))
+      self._draw_status()
+      self._goto_input()
+
     self.add_line(Line('chat', "Connected", timestamp=True))
 
   def on_pubmsg(self, connection, event):
     who = event.source()[0:event.source().find("!")]
-    a = event.arguments()[0].split(":", 1)
-    msg = who + "> " + a[0].strip()
+    msg = who + "> " + " ".join(event.arguments())
     self.add_line(Line('chat', msg, timestamp=True))
 
   def on_motd(self, connection, event):

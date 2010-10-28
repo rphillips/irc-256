@@ -7,7 +7,7 @@ from ui    import *
 SERVER='irc.freenode.net'
 PORT=6667
 NICKNAME='rphillips-2'
-ROOM='#rphillips-test'
+ROOM='#rphillips-testing'
 
 def main(stdscr):
   irc = irclib.IRC()

@@ -11,8 +11,8 @@ class UI:
     self.server = server
     self.room = room
     self.height, self.width = self._limits();
-    self.topic = Line('topic', 'this just in: bloglines is hard', False)
-    self.status = Line('status', '[20:49] [rphillips(+Zi)] [6:#bloglines(+ns)]', False)
+    self.topic = Line('topic', '', False)
+    self.status = Line('status', '', False)
     self.input_line = Line('input', '', False)
 
     self.lines = []
@@ -28,9 +28,9 @@ class UI:
 
     self.irc.add_global_handler("welcome", self.on_connect)
     self.irc.add_global_handler("motd", self.on_motd)
-    self.irc.add_global_handler("privmsg", self.on_privmsg)
-    self.irc.add_global_handler("pubmsg", self.on_privmsg)
+    self.irc.add_global_handler("pubmsg", self.on_pubmsg)
     self.irc.add_global_handler("join", self.on_join)
+    self.irc.add_global_handler("currenttopic", self.on_currenttopic)
 
   def _limits(self):
     return self.screen.getmaxyx()
@@ -57,10 +57,14 @@ class UI:
     pair = self.theme.color_pair('chat')
     self.screen.bkgdset(' ', pair)
 
+  def _goto_input(self):
+    self.screen.move(self.height-1, self.input_line.width())
+
   def _draw_topic(self):
     self._draw_line(0, self.topic)
 
   def _draw_status(self):
+    #self.status = Line('status', "[rphillips(+Zi)] [#%(room)s]" % )
     self._draw_line(self.height-2, self.status)
 
   def _draw_lines(self):
@@ -71,13 +75,13 @@ class UI:
 
   def _draw_input(self):
     self._draw_line(self.height-1, self.input_line)
-    self.screen.move(self.height-1, self.input_line.width())
 
   def draw(self):
     self._draw_topic()
     self._draw_status()
     self._draw_lines()
     self._draw_input()
+    self._goto_input()
     self.screen.refresh()
 
   def add_line(self, line):
@@ -87,17 +91,33 @@ class UI:
     self._draw_input()
     self.screen.refresh()
 
+  def on_currenttopic(self, connection, event):
+    topic = event.arguments()[1]
+    self.topic = Line('topic', topic.strip(), False)
+    self._draw_topic()
+    self._goto_input()
+
   def on_join(self, connection, event):
+    params = {
+      'room' : event.target(),
+      'who' : event.source()[0:event.source().find("!")],
+    }
+
     self.add_line(Line('chat', "Joined " + event.target(), timestamp=False))
+
+    self.status = Line('status', "[%(who)s(+Zi)] [#%(room)s]" % (params))
+    self._draw_status()
+    self._goto_input()
 
   def on_connect(self, connection, event):
     if irclib.is_channel(self.room):
       connection.join(self.room)
     self.add_line(Line('chat', "Connected", timestamp=True))
 
-  def on_privmsg(self, connection, event):
+  def on_pubmsg(self, connection, event):
     who = event.source()[0:event.source().find("!")]
-    msg = who + "> " + " ".join(event.arguments())
+    a = event.arguments()[0].split(":", 1)
+    msg = who + "> " + a[0].strip()
     self.add_line(Line('chat', msg, timestamp=True))
 
   def on_motd(self, connection, event):

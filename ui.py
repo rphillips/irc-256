@@ -2,21 +2,23 @@ import curses
 from line import *
 
 class UI:
-  def __init__(self, screen, theme):
+  def __init__(self, irc, screen, theme):
     self.theme = theme
     self.screen = screen
+    self.irc = irc
+    self.height, self.width = self._limits();
     self.topic = Line('topic', 'this just in: bloglines is hard', False)
     self.status = Line('status', '[20:49] [rphillips(+Zi)] [6:#bloglines(+ns)]', False)
     self.input_line = Line('input', ' ', False)
-    self.height, self.width = self._limits();
+
     self.lines = []
     for i in range(0, self.height - 3):
-      self.lines.insert(i, Line('background', "Blah %i" % i, timestamp=True))
+      self.lines.append(Line('background', "Blah %i" % i, timestamp=True))
 
     curses.echo()
     curses.start_color()
-
     self.screen.clear()
+    #self.screen.timeout(0)
     self.screen.scrollok(True)
     self.screen.setscrreg(1, self.height-3)
 
@@ -54,7 +56,7 @@ class UI:
 
   def _draw_lines(self):
     i = 1
-    for line in self.lines:
+    for line in self.lines[-self.height:]:
       self._draw_line(i, line)
       i = i+1
 
@@ -69,6 +71,20 @@ class UI:
     self._draw_input()
     self.screen.refresh()
 
+  def add_line(self, line):
+    self.lines.append(line)
+    self.screen.scroll()
+    self._draw_line(self.height-3, line)
+    self._draw_input()
+    self.screen.refresh()
+
   def run(self):
+    msg = ""
     while 1:
-      self.screen.getch()
+      ch = self.screen.getch()
+      if ch == ord('\n'):
+        if msg !=  "":
+          self.add_line(Line('background', msg, timestamp=True))
+          msg = ""
+      else:
+        msg += chr(ch)

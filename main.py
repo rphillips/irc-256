@@ -4,7 +4,7 @@ from ui    import *
 
 def main(stdscr):
   theme = WombatTheme()
-  ui = UI(stdscr, theme)
+  ui = UI(None, stdscr, theme)
   ui.draw()
   ui.run()
 

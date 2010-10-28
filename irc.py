@@ -8,7 +8,7 @@ COLORS = [
 ]
 
 def pad_str(max_x, msg):
-  return msg #+ ((max_x - len(msg)) * ' ')
+  return msg + (((max_x - len(msg)) - 1) * ' ')
 
 def update_topic(stdscr, msg):
   stdscr_y, stdscr_x = stdscr.getmaxyx()
@@ -21,8 +21,6 @@ def update_status(stdscr, msg):
   stdscr_y, stdscr_x = stdscr.getmaxyx()
   stdscr.attrset(curses.color_pair(3))
   stdscr.clrtoeol()
-  #stdscr.addstr(stdscr_y-2, 0, msg)
-  #stdscr.hline(stdscr_y-2, 0, '-', 10)
   stdscr.refresh()
 
 def append_line(stdscr, line):
@@ -31,7 +29,7 @@ def append_line(stdscr, line):
   stdscr.scroll()
   stdscr.clrtoeol()
   stdscr.attrset(curses.color_pair(2))
-  stdscr.addstr(stdscr_y-3, 0, pad_str(stdscr_x, t + line))
+  stdscr.addstr(stdscr_y-2, 0, pad_str(stdscr_x, t + line))
   stdscr.move(stdscr_y-1, 0)
   stdscr.refresh()
 
@@ -40,7 +38,7 @@ def setup(stdscr):
   stdscr.clear()
   stdscr.scrollok(True)
   stdscr_y, stdscr_x = stdscr.getmaxyx()
-  stdscr.setscrreg(1, stdscr_y-3)
+  stdscr.setscrreg(1, stdscr_y-2)
 
   # setup theme
   for i in range(0, len(COLORS)):

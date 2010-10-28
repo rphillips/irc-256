@@ -9,7 +9,7 @@ class UI:
     self.height, self.width = self._limits();
     self.topic = Line('topic', 'this just in: bloglines is hard', False)
     self.status = Line('status', '[20:49] [rphillips(+Zi)] [6:#bloglines(+ns)]', False)
-    self.input_line = Line('input', ' ', False)
+    self.input_line = Line('input', '', False)
 
     self.lines = []
 
@@ -32,8 +32,9 @@ class UI:
       self.screen.attrset(self.theme.color_pair('time'))
       self.screen.addnstr(line.timestamp, self.width)
       offset += len(line.timestamp)
+
+    self.screen.attrset(self.theme.color_pair(line.attr))
     if line.data:
-      self.screen.attrset(self.theme.color_pair(line.attr))
       self.screen.addnstr(line.data, self.width)
       offset += len(line.data)
 
@@ -60,7 +61,7 @@ class UI:
 
   def _draw_input(self):
     self._draw_line(self.height-1, self.input_line)
-    self.screen.move(self.height-1,0)
+    self.screen.move(self.height-1, self.input_line.width())
 
   def draw(self):
     self._draw_topic()
@@ -81,16 +82,19 @@ class UI:
       self.add_line(Line('chat', msg, timestamp=True))
 
   def run(self):
-    msg = ""
     while 1:
       ch = self.screen.getch()
       if ch != -1:
         if ch == ord('\n'):
-          if msg !=  "":
-            self.add_line(Line('chat', msg, timestamp=True))
-            self.irc.write(msg)
-            msg = ""
+          msg = self.input_line.data
+          self.add_line(Line('chat', msg, timestamp=True))
+          self.irc.write(msg)
+          self.input_line.clear_data()
+          self._draw_input()
+        elif ch == 127: #backspace
+          self.input_line.backspace()
+          self._draw_input()
         else:
-          msg += chr(ch)
+          self.input_line.add_ch(chr(ch))
 
-      self.irc.run_once(self._in_cb)
+      #self.irc.run_once(self._in_cb)

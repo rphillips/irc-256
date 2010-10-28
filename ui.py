@@ -12,17 +12,15 @@ class UI:
     self.input_line = Line('input', ' ', False)
 
     self.lines = []
-    for i in range(0, self.height - 3):
-      self.lines.append(Line('background', "Blah %i" % i, timestamp=True))
 
     curses.echo()
     curses.start_color()
     self.screen.clear()
-    #self.screen.timeout(0)
+    self.screen.timeout(0)
     self.screen.scrollok(True)
     self.screen.setscrreg(1, self.height-3)
 
-    self._draw_background()
+    self._draw_chat()
 
   def _limits(self):
     return self.screen.getmaxyx()
@@ -44,8 +42,8 @@ class UI:
       self.screen.addch(' ')
       pad_count -= 1
 
-  def _draw_background(self):
-    pair = self.theme.color_pair('background')
+  def _draw_chat(self):
+    pair = self.theme.color_pair('chat')
     self.screen.bkgdset(' ', pair)
 
   def _draw_topic(self):
@@ -78,13 +76,21 @@ class UI:
     self._draw_input()
     self.screen.refresh()
 
+  def _in_cb(self, msg):
+    if msg != "":
+      self.add_line(Line('chat', msg, timestamp=True))
+
   def run(self):
     msg = ""
     while 1:
       ch = self.screen.getch()
-      if ch == ord('\n'):
-        if msg !=  "":
-          self.add_line(Line('background', msg, timestamp=True))
-          msg = ""
-      else:
-        msg += chr(ch)
+      if ch != -1:
+        if ch == ord('\n'):
+          if msg !=  "":
+            self.add_line(Line('chat', msg, timestamp=True))
+            self.irc.write(msg)
+            msg = ""
+        else:
+          msg += chr(ch)
+
+      self.irc.run_once(self._in_cb)

@@ -28,7 +28,7 @@ class WombatTheme(Theme):
   theme = {
       'status'     : { 'fg':230, 'bg':237 }
     , 'topic'      : { 'fg':230, 'bg':237 }
-    , 'background' : { 'fg':188, 'bg':234 }
+    , 'chat'       : { 'fg':188, 'bg':234 }
     , 'line'       : { 'fg':188, 'bg':235 }
     , 'time'       : { 'fg':101, 'bg':232 }
     , 'input'      : { 'fg':251, 'bg':234 }

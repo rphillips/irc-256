@@ -9,7 +9,7 @@ irclib.py with a custom Apache licensed module.
 Author
 ======
 
-Ryan Phillips <ryan at trolocsis.com>
+Ryan Phillips - ryan at trolocsis.com
 
 Goal
 ====
